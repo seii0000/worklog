@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { UserAuth } from "../context/AuthContext";
+// app/components/Navbar.jsx
+"use client";
+import Link from 'next/link';
+import { UserAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const { user, googleSignIn, logOut } = UserAuth();
-  const [loading, setLoading] = useState(true);
 
   const handleSignIn = async () => {
     try {
@@ -22,49 +22,52 @@ const Navbar = () => {
     }
   };
 
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      setLoading(false);
-    };
-    checkAuthentication();
-  }, [user]);
-
   return (
-    <div className="h-20 w-full border-b-2 flex items-center justify-between p-2">
-      <ul className="flex">
-        <li className="p-2 cursor-pointer">
-          <Link href="/">Home</Link>
-        </li>
-        <li className="p-2 cursor-pointer">
-          <Link href="/about">About</Link>
-        </li>
+    <nav className="bg-white shadow-lg">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex space-x-7">
+            <Link href="/" className="flex items-center py-4 px-2">
+              <span className="font-semibold text-gray-500 text-lg">WorkLog</span>
+            </Link>
+            
+            <div className="hidden md:flex items-center space-x-1">
+              <Link href="/" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
+                Home
+              </Link>
+              {user && (
+                <>
+                  <Link href="/worklog" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
+                    New Entry
+                  </Link>
+                  <Link href="/profile" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
+                    Profile
+                  </Link>
+                </>
+              )}
+              <Link href="/about" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
+                About
+              </Link>
+            </div>
+          </div>
 
-        {!user ? null : (
-          <li className="p-2 cursor-pointer">
-            <Link href="/profile">Profile</Link>
-          </li>
-        )}
-      </ul>
-
-      {loading ? null : !user ? (
-        <ul className="flex">
-          <li onClick={handleSignIn} className="p-2 cursor-pointer">
-            Login
-          </li>
-          <li onClick={handleSignIn} className="p-2 cursor-pointer">
-            Sign up
-          </li>
-        </ul>
-      ) : (
-        <div>
-          <p>Welcome, {user.displayName}</p>
-          <p className="cursor-pointer" onClick={handleSignOut}>
-            Sign out
-          </p>
+          <div className="flex items-center space-x-3">
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full" />
+                <button onClick={handleSignOut} className="py-2 px-4 bg-red-500 hover:bg-red-600 text-white rounded transition duration-300">
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button onClick={handleSignIn} className="py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded transition duration-300">
+                Login with Google
+              </button>
+            )}
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </nav>
   );
 };
 
