@@ -6,12 +6,12 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyBvKkpUNy1KqyE2LzZZKic1vu4pody4fGU",
+  authDomain: "nextjs-worklog-app.firebaseapp.com",
+  projectId: "nextjs-worklog-app",
+  storageBucket: "nextjs-worklog-app.firebasestorage.app",
+  messagingSenderId: "50437099751",
+  appId: "1:50437099751:web:4f5c728f2c6756f262d242",
 };
 
 // Initialize Firebase
