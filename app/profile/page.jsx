@@ -2,29 +2,11 @@
 import React, { useEffect, useState } from "react";
 import { UserAuth } from "../context/AuthContext";
 import Spinner from "../components/Spinner";
-import { db } from "../firebase";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-} from "firebase/firestore";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Box,
-  Typography,
-} from "@mui/material";
-import * as XLSX from "xlsx";
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
+import * as XLSX from 'xlsx';
 
-const Profile = () => {
+const Page = () => {
   const { user } = UserAuth();
   const [loading, setLoading] = useState(true);
   const [worklogs, setWorklogs] = useState([]);
@@ -32,112 +14,95 @@ const Profile = () => {
   useEffect(() => {
     const checkAuthentication = async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
-      if (user) {
-        await fetchWorklogs();
-      }
       setLoading(false);
     };
     checkAuthentication();
   }, [user]);
 
-  const fetchWorklogs = async () => {
-    try {
-      const worklogsRef = collection(db, "worklogs");
-      const q = query(
-        worklogsRef,
-        where("userId", "==", user.uid),
-        orderBy("date", "desc")
-      );
-      const querySnapshot = await getDocs(q);
-      const worklogData = querySnapshot.docs.map((doc) => ({
+  useEffect(() => {
+    if (!user) return;
+
+    // Subscribe to worklogs
+    const q = query(
+      collection(db, 'worklogs'),
+      where('userId', '==', user.uid),
+      orderBy('date', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const logs = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
-        date: doc.data().date.toDate(),
+        ...doc.data()
       }));
-      setWorklogs(worklogData);
-    } catch (error) {
-      console.error("Error fetching worklogs:", error);
-    }
-  };
+      setWorklogs(logs);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const exportToExcel = () => {
-    const worklogData = worklogs.map((log) => ({
-      "Ngày": log.date.toLocaleDateString("vi-VN"),
-      "Công việc": log.task,
-      "Nguồn": log.source,
-      "Sản phẩm": log.product,
-      "Giá thành": log.price,
-      "Ghi chú": log.notes,
+    const workbookData = worklogs.map(log => ({
+      'Ngày': new Date(log.date).toLocaleDateString('vi-VN'),
+      'Công việc': log.task,
+      'Nguồn': log.source,
+      'Sản phẩm': log.product,
+      'Giá thành': log.price,
+      'Ghi chú': log.notes
     }));
 
-    const ws = XLSX.utils.json_to_sheet(worklogData);
+    const ws = XLSX.utils.json_to_sheet(workbookData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Worklogs");
     XLSX.writeFile(wb, "worklogs.xlsx");
   };
 
   if (loading) return <Spinner />;
-
-  if (!user) {
-    return (
-      <div className="p-4">
-        <Typography variant="h6">
-          You must be logged in to view this page - protected route.
-        </Typography>
-      </div>
-    );
-  }
+  if (!user) return <p>You must be logged in to view this page - protected route.</p>;
 
   return (
     <div className="p-4">
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Welcome, {user.displayName}
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Welcome, {user.displayName}</h1>
+        <button
           onClick={exportToExcel}
-          sx={{ mb: 2 }}
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
         >
-          Xuất Excel
-        </Button>
-      </Box>
+          Export to Excel
+        </button>
+      </div>
 
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="worklog table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Ngày</TableCell>
-              <TableCell>Công việc</TableCell>
-              <TableCell>Nguồn</TableCell>
-              <TableCell>Sản phẩm</TableCell>
-              <TableCell>Giá thành</TableCell>
-              <TableCell>Ghi chú</TableCell>
-              <TableCell>Trạng thái</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-300">
+          <thead>
+            <tr>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Công việc</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nguồn</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sản phẩm</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá thành</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody>
             {worklogs.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell>
-                  {log.date.toLocaleDateString("vi-VN")}
-                </TableCell>
-                <TableCell>{log.task}</TableCell>
-                <TableCell>{log.source}</TableCell>
-                <TableCell>{log.product}</TableCell>
-                <TableCell>{log.price.toLocaleString("vi-VN")}đ</TableCell>
-                <TableCell>{log.notes}</TableCell>
-                <TableCell>
-                  {log.checkedOut ? "Đã checkout" : "Chưa checkout"}
-                </TableCell>
-              </TableRow>
+              <tr key={log.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap border-b border-gray-300">
+                  {new Date(log.date).toLocaleDateString('vi-VN')}
+                </td>
+                <td className="px-6 py-4 border-b border-gray-300">{log.task}</td>
+                <td className="px-6 py-4 border-b border-gray-300">{log.source}</td>
+                <td className="px-6 py-4 border-b border-gray-300">{log.product}</td>
+                <td className="px-6 py-4 whitespace-nowrap border-b border-gray-300">
+                  {log.price.toLocaleString('vi-VN')} đ
+                </td>
+                <td className="px-6 py-4 border-b border-gray-300">{log.notes}</td>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
-export default Profile;
+export default Page;
