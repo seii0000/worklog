@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useRouter } from 'next/navigation';
 import { UserAuth } from "../context/AuthContext";
 import Spinner from "../components/Spinner";
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import * as XLSX from 'xlsx';
 
@@ -10,6 +11,9 @@ const Page = () => {
   const { user } = UserAuth();
   const [loading, setLoading] = useState(true);
   const [worklogs, setWorklogs] = useState([]);
+  const [totalWorklogs, setTotalWorklogs] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     const checkAuthentication = async () => {
@@ -35,6 +39,24 @@ const Page = () => {
         ...doc.data()
       }));
       setWorklogs(logs);
+
+      // Tính tổng số công việc và tổng giá thành trong tháng hiện tại
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const totalWorklogs = logs.filter(log => {
+        const logDate = new Date(log.date);
+        return logDate.getMonth() === currentMonth && logDate.getFullYear() === currentYear;
+      }).length;
+      setTotalWorklogs(totalWorklogs);
+
+      const totalPrice = logs.reduce((sum, log) => {
+        const logDate = new Date(log.date);
+        if (logDate.getMonth() === currentMonth && logDate.getFullYear() === currentYear) {
+          return sum + log.price;
+        }
+        return sum;
+      }, 0);
+      setTotalPrice(totalPrice);
     });
 
     return () => unsubscribe();
@@ -56,8 +78,29 @@ const Page = () => {
     XLSX.writeFile(wb, "worklogs.xlsx");
   };
 
+  const handleEdit = (log) => {
+    const query = encodeURIComponent(JSON.stringify(log));
+    router.push(`/worklog/edit?log=${query}`);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this worklog?")) return;
+
+    try {
+      await deleteDoc(doc(db, 'worklogs', id));
+    } catch (error) {
+      console.error("Error deleting worklog:", error);
+      alert("Error deleting worklog");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (loading) return <Spinner />;
   if (!user) return <p>You must be logged in to view this page - protected route.</p>;
+
+  const currentMonth = new Date().getMonth() + 1; // Adding 1 to get the correct month number
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className="p-4">
@@ -81,6 +124,7 @@ const Page = () => {
               <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sản phẩm</th>
               <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá thành</th>
               <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ghi chú</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -96,10 +140,29 @@ const Page = () => {
                   {log.price.toLocaleString('vi-VN')} đ
                 </td>
                 <td className="px-6 py-4 border-b border-gray-300">{log.notes}</td>
+                <td className="px-6 py-4 border-b border-gray-300">
+                  <button
+                    onClick={() => handleEdit(log)}
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    onClick={() => handleDelete(log.id)}
+                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Xóa
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-4">
+        <h2 className="text-xl font-bold">Tổng số công việc trong tháng {currentMonth}/{currentYear}: {totalWorklogs}</h2>
+        <h2 className="text-xl font-bold">Tổng giá thành trong tháng {currentMonth}/{currentYear}: {totalPrice.toLocaleString('vi-VN')} đ</h2>
       </div>
     </div>
   );

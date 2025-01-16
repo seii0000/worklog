@@ -1,13 +1,16 @@
 "use client";
-import { useState } from "react";
-import { UserAuth } from "../context/AuthContext";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from 'next/navigation';
+import { UserAuth } from "../../context/AuthContext";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from '../../firebase';
 
-const WorklogForm = () => {
+const EditWorklog = () => {
   const { user } = UserAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split("T")[0],
+    date: "",
     task: "",
     source: "",
     product: "",
@@ -16,34 +19,40 @@ const WorklogForm = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const logParam = searchParams.get('log');
+    if (logParam) {
+      const log = JSON.parse(decodeURIComponent(logParam));
+      setFormData({
+        date: log.date || "",
+        task: log.task || "",
+        source: log.source || "",
+        product: log.product || "",
+        price: log.price || "",
+        notes: log.notes || "",
+      });
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user || loading) return;
 
     setLoading(true);
     try {
-      await addDoc(collection(db, "worklogs"), {
+      const logParam = searchParams.get('log');
+      const log = JSON.parse(decodeURIComponent(logParam));
+      const docRef = doc(db, "worklogs", log.id);
+      await updateDoc(docRef, {
         ...formData,
         price: parseFloat(formData.price),
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-        checkedOut: false,
       });
 
-      // Reset form
-      setFormData({
-        date: new Date().toISOString().split("T")[0],
-        task: "",
-        source: "",
-        product: "",
-        price: "",
-        notes: "",
-      });
-
-      alert("Worklog added successfully!");
+      alert("Worklog updated successfully!");
+      router.push('/profile');
     } catch (error) {
-      console.error("Error adding worklog:", error);
-      alert("Error adding worklog");
+      console.error("Error updating worklog:", error);
+      alert("Error updating worklog");
     } finally {
       setLoading(false);
     }
@@ -51,6 +60,7 @@ const WorklogForm = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Chỉnh sửa nhật ký công việc</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -142,11 +152,11 @@ const WorklogForm = () => {
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           disabled={loading}
         >
-          {loading ? "Đang lưu..." : "Lưu worklog"}
+          {loading ? "Đang lưu..." : "Cập nhật worklog"}
         </button>
       </form>
     </div>
   );
 };
 
-export default WorklogForm;
+export default EditWorklog;
