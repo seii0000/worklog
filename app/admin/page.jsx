@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useAdminAuth } from "../context/AdminContext";
-import { collection, query, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, query, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import Spinner from "../components/Spinner";
+import { XIcon } from '@heroicons/react/solid';
 
 const AdminPage = () => {
   const { admin } = useAdminAuth();
@@ -15,6 +16,11 @@ const AdminPage = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [task, setTask] = useState("");
+  const [source, setSource] = useState("");
+  const [product, setProduct] = useState("");
+  const [price, setPrice] = useState("");
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedWorklog, setSelectedWorklog] = useState(null);
 
   useEffect(() => {
     if (!admin) return;
@@ -75,12 +81,40 @@ const AdminPage = () => {
       filtered = filtered.filter((worklog) => worklog.task.toLowerCase().includes(task.toLowerCase()));
     }
 
+    if (source) {
+      filtered = filtered.filter((worklog) => worklog.source.toLowerCase().includes(source.toLowerCase()));
+    }
+
+    if (product) {
+      filtered = filtered.filter((worklog) => worklog.product.toLowerCase().includes(product.toLowerCase()));
+    }
+
+    if (price) {
+      filtered = filtered.filter((worklog) => worklog.price === parseFloat(price));
+    }
+
+    if (selectedUser) {
+      filtered = filtered.filter((worklog) => worklog.userId === selectedUser);
+    }
+
     setFilteredWorklogs(filtered);
   };
 
   useEffect(() => {
     handleFilter();
-  }, [startDate, endDate, task, worklogs]);
+  }, [startDate, endDate, task, worklogs, source, product, price, selectedUser]);
+
+  const truncateText = (text, length) => {
+    return text.length > length ? text.substring(0, length) + "..." : text;
+  };
+
+  const handleWorklogClick = (worklog) => {
+    setSelectedWorklog(worklog);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedWorklog(null);
+  };
 
   if (loading) return <Spinner />;
   if (!admin) return <p>You must be logged in to view this page - protected route.</p>;
@@ -145,6 +179,22 @@ const AdminPage = () => {
         />
       </div>
 
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700">User</label>
+        <select
+          value={selectedUser}
+          onChange={(e) => setSelectedUser(e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        >
+          <option value="">All Users</option>
+          {employees.map((employee) => (
+            <option key={employee.uid} value={employee.uid}>
+              {employee.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
@@ -160,19 +210,40 @@ const AdminPage = () => {
           </thead>
           <tbody>
             {filteredWorklogs.map((worklog) => (
-              <tr key={worklog.id} className="hover:bg-gray-50">
+              <tr key={worklog.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleWorklogClick(worklog)}>
                 <td className="px-6 py-4 border-b border-gray-300">{worklog.date}</td>
-                <td className="px-6 py-4 border-b border-gray-300">{worklog.task}</td>
-                <td className="px-6 py-4 border-b border-gray-300">{worklog.source}</td>
-                <td className="px-6 py-4 border-b border-gray-300">{worklog.product}</td>
+                <td className="px-6 py-4 border-b border-gray-300">{truncateText(worklog.task, 50)}</td>
+                <td className="px-6 py-4 border-b border-gray-300">{truncateText(worklog.source, 50)}</td>
+                <td className="px-6 py-4 border-b border-gray-300">{truncateText(worklog.product, 50)}</td>
                 <td className="px-6 py-4 border-b border-gray-300">{worklog.price.toLocaleString('vi-VN')} đ</td>
-                <td className="px-6 py-4 border-b border-gray-300">{worklog.notes}</td>
+                <td className="px-6 py-4 border-b border-gray-300">{truncateText(worklog.notes, 50)}</td>
                 <td className="px-6 py-4 border-b border-gray-300">{userMap[worklog.userId] || "Unknown User"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {selectedWorklog && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50" onClick={handleCloseDetail}>
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={handleCloseDetail}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              <XIcon className="h-6 w-6" />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Chi tiết Worklog</h2>
+            <p><strong>Date:</strong> {selectedWorklog.date}</p>
+            <p><strong>Task:</strong> {selectedWorklog.task}</p>
+            <p><strong>Source:</strong> {selectedWorklog.source}</p>
+            <p><strong>Product:</strong> {selectedWorklog.product}</p>
+            <p><strong>Price:</strong> {selectedWorklog.price.toLocaleString('vi-VN')} đ</p>
+            <p><strong>Notes:</strong> {selectedWorklog.notes}</p>
+            <p><strong>User:</strong> {userMap[selectedWorklog.userId] || "Unknown User"}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

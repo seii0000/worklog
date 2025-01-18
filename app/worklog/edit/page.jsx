@@ -5,17 +5,17 @@ import { UserAuth } from "../../context/AuthContext";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from '../../firebase';
 
-const EditWorklog = ({log}) => {
+const EditWorklog = () => {
   const { user } = UserAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
-    date: log.date || "",
-    task: log.task || "",
-    source: log.source || "",
-    product: log.product || "",
-    price: log.price || "",
-    notes: log.notes || "",
+    date: "",
+    task: "",
+    source: "",
+    product: "",
+    price: "",
+    notes: "",
   });
   const [loading, setLoading] = useState(false);
 
