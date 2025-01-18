@@ -2,20 +2,20 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { UserAuth } from "../../context/AuthContext";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from '../../firebase';
 
-const EditWorklog = () => {
+const EditWorklog = ({log}) => {
   const { user } = UserAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
-    date: "",
-    task: "",
-    source: "",
-    product: "",
-    price: "",
-    notes: "",
+    date: log.date || "",
+    task: log.task || "",
+    source: log.source || "",
+    product: log.product || "",
+    price: log.price || "",
+    notes: log.notes || "",
   });
   const [loading, setLoading] = useState(false);
 

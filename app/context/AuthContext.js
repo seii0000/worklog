@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useContext, createContext, useState, useEffect } from "react";
 import {
@@ -7,16 +7,37 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  const googleSignIn = () => {
+  const googleSignIn = async () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Lưu thông tin người dùng vào Firestore
+      await setDoc(doc(db, "employees", user.uid), {
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        uid: user.uid,
+      });
+
+      // Lưu ánh xạ userId đến name vào Firestore
+      await setDoc(doc(db, "userMap", user.uid), {
+        name: user.displayName,
+      });
+
+      setUser(user);
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
   };
 
   const logOut = () => {
@@ -28,7 +49,7 @@ export const AuthContextProvider = ({ children }) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, googleSignIn, logOut }}>

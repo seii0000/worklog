@@ -2,9 +2,11 @@
 "use client";
 import Link from 'next/link';
 import { UserAuth } from '../context/AuthContext';
+import { useAdminAuth } from "../context/AdminContext";
 
 const Navbar = () => {
   const { user, googleSignIn, logOut } = UserAuth();
+  const { admin } = useAdminAuth();
 
   const handleSignIn = async () => {
     try {
@@ -48,6 +50,11 @@ const Navbar = () => {
               <Link href="/about" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
                 About
               </Link>
+              {admin && (
+                <Link href="/admin" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
+                  Admin
+                </Link>
+              )}
             </div>
           </div>
 
