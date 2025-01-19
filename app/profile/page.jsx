@@ -11,6 +11,7 @@ const Page = () => {
   const { user } = UserAuth();
   const [loading, setLoading] = useState(true);
   const [worklogs, setWorklogs] = useState([]);
+  const [language, setLanguage] = useState('en');
   const router = useRouter();
 
   useEffect(() => {
@@ -64,44 +65,93 @@ const Page = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this worklog?")) return;
+    if (!confirm(translations[language].confirmDelete)) return;
 
     try {
       await deleteDoc(doc(db, 'worklogs', id));
     } catch (error) {
       console.error("Error deleting worklog:", error);
-      alert("Error deleting worklog");
+      alert(translations[language].errorDelete);
     } finally {
       setLoading(false);
     }
   }
 
+  const toggleLanguage = () => {
+    setLanguage((prevLanguage) => (prevLanguage === 'en' ? 'vi' : 'en'));
+  };
+
+  const translations = {
+    en: {
+      welcome: 'Welcome',
+      export: 'Export to Excel',
+      date: 'Date',
+      task: 'Task',
+      source: 'Source',
+      product: 'Product',
+      price: 'Price',
+      note: 'Note',
+      action: 'Action',
+      edit: 'Edit',
+      delete: 'Delete',
+      confirmDelete: 'Are you sure you want to delete this worklog?',
+      errorDelete: 'Error deleting worklog',
+      loginRequired: 'You must be logged in to view this page - protected route.',
+    },
+    vi: {
+      welcome: 'Chào mừng',
+      export: 'Xuất ra Excel',
+      date: 'Ngày',
+      task: 'Công việc',
+      source: 'Nguồn',
+      product: 'Sản phẩm',
+      price: 'Giá thành',
+      note: 'Ghi chú',
+      action: 'Hành động',
+      edit: 'Sửa',
+      delete: 'Xóa',
+      confirmDelete: 'Bạn có chắc chắn muốn xóa nhật ký công việc này không?',
+      errorDelete: 'Lỗi khi xóa nhật ký công việc',
+      loginRequired: 'Bạn phải đăng nhập để xem trang này - trang được bảo vệ.',
+    },
+  };
+
+  const t = translations[language];
+
   if (loading) return <Spinner />;
-  if (!user) return <p>You must be logged in to view this page - protected route.</p>;
+  if (!user) return <p>{t.loginRequired}</p>;
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Welcome, {user.displayName}</h1>
-        <button
-          onClick={exportToExcel}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Export to Excel
-        </button>
+        <h1 className="text-2xl font-bold">{t.welcome}, {user.displayName}</h1>
+        <div className="flex space-x-2">
+          <button
+            onClick={exportToExcel}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          >
+            {t.export}
+          </button>
+          <button
+            onClick={toggleLanguage}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            {language === 'en' ? 'Tiếng Việt' : 'English'}
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr>
-              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
-              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Công việc</th>
-              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nguồn</th>
-              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sản phẩm</th>
-              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá thành</th>
-              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ghi chú</th>
-              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.date}</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.task}</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.source}</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.product}</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.price}</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.note}</th>
+              <th className="px-6 py-3 border-b border-gray-300 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.action}</th>
             </tr>
           </thead>
           <tbody>
@@ -123,13 +173,13 @@ const Page = () => {
                       onClick={() => handleEdit(log)}
                       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
                     >
-                      Sửa
+                      {t.edit}
                     </button>
                     <button
                       onClick={() => handleDelete(log.id)}
                       className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                     >
-                      Xóa
+                      {t.delete}
                     </button>
                   </td>
                 </tr>

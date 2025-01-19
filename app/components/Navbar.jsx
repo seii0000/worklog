@@ -1,5 +1,5 @@
-// app/components/Navbar.jsx
 "use client";
+import React, { useState } from "react";
 import Link from 'next/link';
 import { UserAuth } from '../context/AuthContext';
 import { useAdminAuth } from "../context/AdminContext";
@@ -7,6 +7,7 @@ import { useAdminAuth } from "../context/AdminContext";
 const Navbar = () => {
   const { user, googleSignIn, logOut } = UserAuth();
   const { admin } = useAdminAuth();
+  const [language, setLanguage] = useState('en');
 
   const handleSignIn = async () => {
     try {
@@ -24,6 +25,33 @@ const Navbar = () => {
     }
   };
 
+  const toggleLanguage = () => {
+    setLanguage((prevLanguage) => (prevLanguage === 'en' ? 'vi' : 'en'));
+  };
+
+  const translations = {
+    en: {
+      home: 'Home',
+      newEntry: 'New Entry',
+      profile: 'Profile',
+      about: 'About',
+      admin: 'Admin',
+      logout: 'Logout',
+      login: 'Login with Google',
+    },
+    vi: {
+      home: 'Trang chủ',
+      newEntry: 'Nhật ký mới',
+      profile: 'Hồ sơ',
+      about: 'Giới thiệu',
+      admin: 'Quản trị',
+      logout: 'Đăng xuất',
+      login: 'Đăng nhập với Google',
+    },
+  };
+
+  const t = translations[language];
+
   return (
     <nav className="bg-white shadow-lg">
       <div className="max-w-6xl mx-auto px-4">
@@ -35,40 +63,43 @@ const Navbar = () => {
             
             <div className="hidden md:flex items-center space-x-1">
               <Link href="/" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
-                Home
+                {t.home}
               </Link>
               {user && (
                 <>
                   <Link href="/worklog" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
-                    New Entry
+                    {t.newEntry}
                   </Link>
                   <Link href="/profile" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
-                    Profile
+                    {t.profile}
                   </Link>
                 </>
               )}
               <Link href="/about" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
-                About
+                {t.about}
               </Link>
               {admin && (
                 <Link href="/admin" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
-                  Admin
+                  {t.admin}
                 </Link>
               )}
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
+            <button onClick={toggleLanguage} className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded transition duration-300">
+              {language === 'en' ? 'Tiếng Việt' : 'English'}
+            </button>
             {user ? (
               <div className="flex items-center space-x-4">
                 <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full" />
                 <button onClick={handleSignOut} className="py-2 px-4 bg-red-500 hover:bg-red-600 text-white rounded transition duration-300">
-                  Logout
+                  {t.logout}
                 </button>
               </div>
             ) : (
               <button onClick={handleSignIn} className="py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded transition duration-300">
-                Login with Google
+                {t.login}
               </button>
             )}
           </div>
