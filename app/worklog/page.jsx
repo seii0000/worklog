@@ -1,9 +1,9 @@
 "use client";
 import WorklogForm from '../components/WorklogForm';
-import { UserAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
-  const { user } = UserAuth();
+  const { user } = useAuth();
 
   return (
     <main className="p-4">

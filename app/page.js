@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { UserAuth } from "./context/AuthContext";
+import { useAuth } from "./context/AuthContext";
 import { 
   Button, 
   Container, 
@@ -13,7 +13,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function Home() {
-  const { user, googleSignIn } = UserAuth();
+  const { user, googleSignIn } = useAuth();
   const [loading, setLoading] = useState(true);
 
   const handleSignIn = async () => {

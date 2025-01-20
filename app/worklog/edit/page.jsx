@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { UserAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from '../../firebase';
 
 const EditWorklog = () => {
-  const { user } = UserAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({

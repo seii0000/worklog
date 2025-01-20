@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import Link from 'next/link';
-import { UserAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useAdminAuth } from "../context/AdminContext";
 
 const Navbar = () => {
-  const { user, googleSignIn, logOut } = UserAuth();
+  const { user, googleSignIn, logOut } = useAuth();
   const { admin } = useAdminAuth();
   const [language, setLanguage] = useState('en');
 
@@ -34,7 +34,7 @@ const Navbar = () => {
       home: 'Home',
       newEntry: 'New Entry',
       profile: 'Profile',
-      about: 'About',
+      report: 'Report',
       admin: 'Admin',
       logout: 'Logout',
       login: 'Login with Google',
@@ -43,7 +43,7 @@ const Navbar = () => {
       home: 'Trang chủ',
       newEntry: 'Nhật ký mới',
       profile: 'Hồ sơ',
-      about: 'Giới thiệu',
+      report: 'Báo cáo',
       admin: 'Quản trị',
       logout: 'Đăng xuất',
       login: 'Đăng nhập với Google',
@@ -76,7 +76,7 @@ const Navbar = () => {
                 </>
               )}
               <Link href="/about" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">
-                {t.about}
+                {t.report}
               </Link>
               {admin && (
                 <Link href="/admin" className="py-4 px-2 text-gray-500 hover:text-green-500 transition duration-300">

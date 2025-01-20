@@ -1,14 +1,14 @@
 "use client"; // Use client-side rendering
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
-import { UserAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import Spinner from "../components/Spinner";
 import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import * as XLSX from 'xlsx';
 
 const Page = () => {
-  const { user } = UserAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [worklogs, setWorklogs] = useState([]);
   const [language, setLanguage] = useState('en');
