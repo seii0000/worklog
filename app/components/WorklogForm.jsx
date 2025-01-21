@@ -1,21 +1,27 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, doc, updateDoc } from 'firebase/firestore';
 
-const WorklogForm = () => {
+const WorklogForm = ({ initialData = {}, onSubmit }) => {
   const { user } = useAuth();
   const router = useRouter();
-  const [task, setTask] = useState('');
-  const [source, setSource] = useState('');
-  const [product, setProduct] = useState('');
-  const [price, setPrice] = useState('');
-  const [notes, setNotes] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [loading, setLoading] = useState(false); // Thêm trạng thái loading
+  const [task, setTask] = useState(initialData.task || '');
+  const [source, setSource] = useState(initialData.source || '');
+  const [product, setProduct] = useState(initialData.product || '');
+  const [price, setPrice] = useState(initialData.price || '');
+  const [notes, setNotes] = useState(initialData.notes || '');
+  const [date, setDate] = useState(initialData.date || new Date().toISOString().split('T')[0]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialData.date) {
+      setDate(initialData.date);
+    }
+  }, [initialData.date]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,31 +31,41 @@ const WorklogForm = () => {
       return;
     }
 
-    setLoading(true); // Bắt đầu loading
+    setLoading(true);
 
     try {
-      await addDoc(collection(db, 'worklogs'), {
+      const data = {
         userId: user.uid,
         task,
         source,
         product,
         price: parseFloat(price),
         notes,
-        date: Timestamp.fromDate(new Date(date)),
-      });
+        date: date,
+        createdAt: Timestamp.now(),
+      };
+
+      if (initialData.id) {
+        // Update existing worklog
+        const docRef = doc(db, 'worklogs', initialData.id);
+        await updateDoc(docRef, data);
+      } else {
+        // Add new worklog
+        await addDoc(collection(db, 'worklogs'), data);
+      }
 
       router.push('/profile');
     } catch (error) {
-      console.error('Error adding worklog:', error);
-      alert('Error adding worklog');
+      console.error('Error submitting worklog:', error);
+      alert('Error submitting worklog');
     } finally {
-      setLoading(false); // Kết thúc loading
+      setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 bg-white shadow-md rounded">
-      <h2 className="text-2xl font-bold mb-4">New Worklog</h2>
+      <h2 className="text-2xl font-bold mb-4">{initialData.id ? 'Edit Worklog' : 'New Worklog'}</h2>
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="date">
           Date
@@ -132,7 +148,7 @@ const WorklogForm = () => {
           className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={loading}
         >
-          {loading ? 'Adding...' : 'Add Worklog'}
+          {loading ? 'Saving...' : initialData.id ? 'Update Worklog' : 'Add Worklog'}
         </button>
       </div>
       {loading && (
