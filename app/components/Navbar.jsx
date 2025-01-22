@@ -58,7 +58,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex space-x-7">
             <Link href="/" className="flex items-center py-4 px-2">
-              <span className="font-semibold text-gray-500 text-lg">WorkLog</span>
+              <img src="/logo.jpg" alt="Logo" className="h-8 w-auto" />
             </Link>
             
             <div className="hidden md:flex items-center space-x-1">
@@ -92,7 +92,7 @@ const Navbar = () => {
             </button>
             {user ? (
               <div className="flex items-center space-x-4">
-                <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full" />
+                <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
                 <button onClick={handleSignOut} className="py-2 px-4 bg-red-500 hover:bg-red-600 text-white rounded transition duration-300">
                   {t.logout}
                 </button>
