@@ -23,12 +23,20 @@ const UserWorklogChart = () => {
       },
     ],
   });
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
 
-      const q = query(collection(db, 'worklogs'), where('userId', '==', user.uid));
+      let q = query(collection(db, 'worklogs'), where('userId', '==', user.uid));
+      if (startDate) {
+        q = query(q, where('date', '>=', startDate));
+      }
+      if (endDate) {
+        q = query(q, where('date', '<=', endDate));
+      }
       const querySnapshot = await getDocs(q);
       const data = {};
 
@@ -59,11 +67,34 @@ const UserWorklogChart = () => {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, startDate, endDate]);
 
   return (
     <div>
-      <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Total Work Value by Date' } } }} />
+      <div className="flex justify-center mb-4">
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="mr-2 p-2 border rounded"
+        />
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="p-2 border rounded"
+        />
+      </div>
+      <Bar
+        data={chartData}
+        options={{
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Total Work Value by Date' },
+          },
+        }}
+      />
     </div>
   );
 };

@@ -9,7 +9,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-const userId = 'ek545fVI6GWjUPDyI69v2KuJmmZ2'; // Thay thế bằng userId của bạn
+const userId = 'n5lX2R4zpCQsXl8mVh7PFuHXlJz2'; // Thay thế bằng userId của bạn
 
 const generateRandomDate = (start, end) => {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
@@ -23,7 +23,7 @@ const generateWorklog = (date) => {
     task: 'Công việc mẫu',
     source: 'Nguồn mẫu',
     product: 'Sản phẩm mẫu',
-    price: Math.floor(Math.random() * 1000000),
+    price: Math.floor(Math.random() * 10000000),
     notes: 'Ghi chú mẫu',
     createdAt: admin.firestore.Timestamp.fromDate(new Date()),
   };

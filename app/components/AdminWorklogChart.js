@@ -1,72 +1,114 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { collection, query, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useAuth } from '../context/AuthContext';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminWorklogChart = () => {
-  const { user } = useAuth();
   const [chartData, setChartData] = useState({
     labels: [],
-    datasets: [
-      {
-        label: 'Work Value Distribution',
-        data: [],
-        backgroundColor: [],
-        borderColor: [],
-        borderWidth: 1,
-      },
-    ],
+    datasets: [],
   });
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user || user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) return;
+      // Fetch user data
+      const userMapSnapshot = await getDocs(collection(db, 'userMap'));
+      const userMap = {};
+      userMapSnapshot.forEach((doc) => {
+        const { name } = doc.data();
+        userMap[doc.id] = name;
+      });
 
-      const today = new Date().toISOString().split('T')[0];
-      const q = query(collection(db, 'worklogs'), where('date', '==', today));
+      // Fetch worklog data
+      let q = query(collection(db, 'worklogs'));
+      if (startDate) {
+        q = query(q, where('date', '>=', startDate));
+      }
+      if (endDate) {
+        q = query(q, where('date', '<=', endDate));
+      }
       const querySnapshot = await getDocs(q);
       const data = {};
-      const colors = [];
 
       querySnapshot.forEach((doc) => {
-        const { userId, price } = doc.data();
-        if (data[userId]) {
-          data[userId] += price;
+        const { date, price, userId } = doc.data();
+        if (!data[date]) {
+          data[date] = {};
+        }
+        if (data[date][userId]) {
+          data[date][userId] += price;
         } else {
-          data[userId] = price;
-          colors.push(`hsl(${Math.random() * 360}, 100%, 75%)`);
+          data[date][userId] = price;
         }
       });
 
       const labels = Object.keys(data);
-      const values = Object.values(data);
+      const userIds = new Set();
+      const datasets = [];
+
+      labels.forEach((date) => {
+        Object.keys(data[date]).forEach((userId) => {
+          userIds.add(userId);
+        });
+      });
+
+      userIds.forEach((userId) => {
+        const dataset = {
+          label: userMap[userId] || userId, // Use name from userMap or fallback to userId
+          data: labels.map((date) => data[date][userId] || 0),
+          backgroundColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`,
+          borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+          borderWidth: 1,
+        };
+        datasets.push(dataset);
+      });
 
       setChartData({
         labels,
-        datasets: [
-          {
-            label: 'Work Value Distribution',
-            data: values,
-            backgroundColor: colors,
-            borderColor: colors.map(color => color.replace('75%', '50%')),
-            borderWidth: 1,
-          },
-        ],
+        datasets,
       });
     };
 
     fetchData();
-  }, [user]);
+  }, [startDate, endDate]);
 
   return (
     <div>
-      <Pie data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Work Value Distribution by User' } } }} />
+      <div className="flex justify-center mb-4">
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="mr-2 p-2 border rounded"
+        />
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="p-2 border rounded"
+        />
+      </div>
+      <Bar
+        data={chartData}
+        options={{
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Total Work Value by Date and User' },
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true },
+          },
+        }}
+      />
     </div>
   );
 };
