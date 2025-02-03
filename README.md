@@ -26,34 +26,35 @@ WorkLog Manager là một ứng dụng quản lý nhật ký công việc, cho p
    cd worklog-manager
 
 2. Cài đặt các phụ thuộc:
-npm install
+    ```bash
+    npm install
 
 3. Cấu hình Firebase:
 
 Tạo một dự án Firebase mới tại Firebase Console.
 
 Tạo một tệp firebase.js trong thư mục app và cấu hình Firebase:
+    ```bash
+    import { initializeApp } from 'firebase/app';
+    import { getFirestore } from 'firebase/firestore';
 
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+    const firebaseConfig = {
+    apiKey: 'YOUR_API_KEY',
+    authDomain: 'YOUR_AUTH_DOMAIN',
+    projectId: 'YOUR_PROJECT_ID',
+    storageBucket: 'YOUR_STORAGE_BUCKET',
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    appId: 'YOUR_APP_ID',
+    };
 
-const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
-};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-export { db };
+    export { db };
 
 4. Chạy ứng dụng:
-
-npm run dev
+    ```bash
+    npm run dev
 
 Sử dụng
 Trang chủ
